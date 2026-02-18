@@ -1,10 +1,10 @@
 import { existsSync, readFileSync, renameSync } from "node:fs";
 import { join } from "node:path";
+import type { WOPRPluginContext } from "@wopr-network/plugin-types";
 import { logger } from "./logger.js";
 import { WOPR_HOME } from "./paths.js";
 import { initSkillsStorage, setPluginContext } from "./skills-repository.js";
 import type { SkillStateRecord } from "./skills-schema.js";
-import type { WOPRPluginContext } from "@wopr-network/plugin-types";
 
 const SKILLS_STATE_FILE = join(WOPR_HOME, "skills-state.json");
 

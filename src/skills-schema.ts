@@ -1,5 +1,5 @@
-import { z } from "zod";
 import type { PluginSchema } from "@wopr-network/plugin-types";
+import { z } from "zod";
 
 // ---------- skills_state table ----------
 export const skillStateSchema = z.object({

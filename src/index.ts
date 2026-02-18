@@ -1,11 +1,11 @@
 import type { WOPRPlugin, WOPRPluginContext } from "@wopr-network/plugin-types";
-import { skillsPluginSchema } from "./skills-schema.js";
-import { initSkillsStorage, resetSkillsStorageInit, setPluginContext } from "./skills-repository.js";
-import { migrateSkillsToSQL } from "./skills-migrate.js";
-import { discoverSkills, formatSkillsXml } from "./skills.js";
-import { createSkillsRouter } from "./routes.js";
-import { registerSkillsA2ATools, unregisterSkillsA2ATools, setA2AContext } from "./a2a-tools.js";
+import { registerSkillsA2ATools, setA2AContext, unregisterSkillsA2ATools } from "./a2a-tools.js";
 import { setLogger } from "./logger.js";
+import { createSkillsRouter } from "./routes.js";
+import { discoverSkills, formatSkillsXml } from "./skills.js";
+import { migrateSkillsToSQL } from "./skills-migrate.js";
+import { initSkillsStorage, resetSkillsStorageInit, setPluginContext } from "./skills-repository.js";
+import { skillsPluginSchema } from "./skills-schema.js";
 
 let ctx: WOPRPluginContext | null = null;
 

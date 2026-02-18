@@ -21,11 +21,11 @@ import { basename, dirname, join, resolve } from "node:path";
 import { logger } from "./logger.js";
 import { PROJECT_SKILLS_DIR, SKILLS_DIR, WOPR_HOME } from "./paths.js";
 import {
+  type ParsedFrontmatter,
   parseSkillFrontmatter,
+  type SkillValidationWarning,
   validateSkillDescription,
   validateSkillName,
-  type ParsedFrontmatter,
-  type SkillValidationWarning,
 } from "./skill-frontmatter-parser.js";
 
 // ============================================================================
