@@ -43,8 +43,8 @@ describe("skills-schema", () => {
       expect(skillsPluginSchema.namespace).toBe("skills");
     });
 
-    it("has version 1", () => {
-      expect(skillsPluginSchema.version).toBe(1);
+    it("has version 2", () => {
+      expect(skillsPluginSchema.version).toBe(2);
     });
 
     it("defines skills_state table", () => {

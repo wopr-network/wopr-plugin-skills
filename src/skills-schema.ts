@@ -12,15 +12,30 @@ export const skillStateSchema = z.object({
 });
 export type SkillStateRecord = z.infer<typeof skillStateSchema>;
 
+// ---------- skill_registries table ----------
+export const registrySchema = z.object({
+  id: z.string(), // Registry name (primary key, e.g. "wopr-official")
+  url: z.string(), // Registry URL
+  addedAt: z.string(), // ISO timestamp
+  lastFetchedAt: z.string().optional(), // ISO timestamp of last successful fetch
+  lastError: z.string().optional(), // Last fetch error message (null if healthy)
+});
+export type RegistryRecord = z.infer<typeof registrySchema>;
+
 // ---------- PluginSchema ----------
 export const skillsPluginSchema: PluginSchema = {
   namespace: "skills",
-  version: 1,
+  version: 2,
   tables: {
     skills_state: {
       schema: skillStateSchema,
       primaryKey: "id",
       indexes: [{ fields: ["enabled"] }, { fields: ["lastUsedAt"] }],
+    },
+    skill_registries: {
+      schema: registrySchema,
+      primaryKey: "id",
+      indexes: [],
     },
   },
 };

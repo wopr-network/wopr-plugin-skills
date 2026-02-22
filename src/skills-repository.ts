@@ -23,6 +23,11 @@ export function resetSkillsStorageInit(): void {
   initialized = false;
 }
 
+/** Get the current plugin context (for sibling modules) */
+export function getPluginContext(): WOPRPluginContext | null {
+  return ctx;
+}
+
 // ---------- Helper to get repo (ensures init) ----------
 function skillsStateRepo() {
   if (!ctx) {
