@@ -4,6 +4,8 @@
  */
 
 import { Hono } from "hono";
+import { addRegistry, listRegistries, removeRegistry } from "./registries-repository.js";
+import { fetchAllRegistries } from "./registry-fetcher.js";
 import {
   clearSkillCache,
   createSkill,
@@ -40,12 +42,21 @@ export function createSkillsRouter() {
   // Search registries for available skills
   skillsRouter.get("/available", async (c) => {
     const query = c.req.query("q") || "";
-    // TODO: Re-implement registry search when registries are moved to plugin
-    return c.json({
-      skills: [],
-      message: "Registry search not yet implemented in plugin",
-      query,
-    });
+    try {
+      const registries = await listRegistries();
+      const { skills, errors } = await fetchAllRegistries(registries);
+      const filtered = query
+        ? skills.filter(
+            (s) =>
+              s.name.toLowerCase().includes(query.toLowerCase()) ||
+              s.description.toLowerCase().includes(query.toLowerCase()),
+          )
+        : skills;
+      return c.json({ skills: filtered, errors: errors.length > 0 ? errors : undefined });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message, skills: [] }, 500);
+    }
   });
 
   // Create a new skill
@@ -165,12 +176,19 @@ export function createSkillsRouter() {
       return c.json({ error: "Query parameter 'q' is required" }, 400);
     }
 
-    // TODO: Re-implement registry search when registries are moved to plugin
-    return c.json({
-      results: [],
-      message: "Registry search not yet implemented in plugin",
-      query,
-    });
+    try {
+      const registries = await listRegistries();
+      const { skills, errors } = await fetchAllRegistries(registries);
+      const results = skills.filter(
+        (s) =>
+          s.name.toLowerCase().includes(query.toLowerCase()) ||
+          s.description.toLowerCase().includes(query.toLowerCase()),
+      );
+      return c.json({ results, query, errors: errors.length > 0 ? errors : undefined });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message, results: [], query }, 500);
+    }
   });
 
   // Clear skill cache
@@ -180,9 +198,22 @@ export function createSkillsRouter() {
   });
 
   // Skill registries
-  skillsRouter.get("/registries", (c) => {
-    // TODO: Re-implement when registries are moved to plugin
-    return c.json({ registries: [], message: "Registries not yet implemented in plugin" });
+  skillsRouter.get("/registries", async (c) => {
+    try {
+      const registries = await listRegistries();
+      return c.json({
+        registries: registries.map((r) => ({
+          name: r.id,
+          url: r.url,
+          addedAt: r.addedAt,
+          lastFetchedAt: r.lastFetchedAt ?? null,
+          lastError: r.lastError ?? null,
+        })),
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 500);
+    }
   });
 
   skillsRouter.post("/registries", async (c) => {
@@ -193,13 +224,30 @@ export function createSkillsRouter() {
       return c.json({ error: "name and url are required" }, 400);
     }
 
-    // TODO: Re-implement when registries are moved to plugin
-    return c.json({ error: "Registries not yet implemented in plugin" }, 501);
+    try {
+      const registry = await addRegistry(name, url);
+      return c.json({ added: true, registry: { name: registry.id, url: registry.url } }, 201);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("already exists")) {
+        return c.json({ error: message }, 409);
+      }
+      return c.json({ error: message }, 500);
+    }
   });
 
-  skillsRouter.delete("/registries/:name", (c) => {
-    // TODO: Re-implement when registries are moved to plugin
-    return c.json({ error: "Registries not yet implemented in plugin" }, 501);
+  skillsRouter.delete("/registries/:name", async (c) => {
+    const name = c.req.param("name");
+    try {
+      const removed = await removeRegistry(name);
+      if (!removed) {
+        return c.json({ error: `Registry "${name}" not found` }, 404);
+      }
+      return c.json({ removed: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 500);
+    }
   });
 
   return skillsRouter;
