@@ -5,6 +5,7 @@ import { createSkillsRouter } from "./routes.js";
 import { discoverSkills, formatSkillsXml } from "./skills.js";
 import { migrateSkillsToSQL } from "./skills-migrate.js";
 import { initSkillsStorage, resetSkillsStorageInit, setPluginContext } from "./skills-repository.js";
+import { setPluginContextForRegistries } from "./registries-repository.js";
 import { skillsPluginSchema } from "./skills-schema.js";
 
 let ctx: WOPRPluginContext | null = null;
@@ -22,6 +23,7 @@ const plugin: WOPRPlugin = {
 
     // Wire up storage context
     setPluginContext(context);
+    setPluginContextForRegistries(context);
     setA2AContext(context);
 
     // 1. Register schema + init storage

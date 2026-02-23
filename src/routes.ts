@@ -15,6 +15,7 @@ import {
   readAllSkillStatesAsync,
   removeSkill,
 } from "./skills.js";
+import { addRegistry, getRegistries, removeRegistry } from "./registries-repository.js";
 
 export function createSkillsRouter() {
   const skillsRouter = new Hono();
@@ -180,9 +181,14 @@ export function createSkillsRouter() {
   });
 
   // Skill registries
-  skillsRouter.get("/registries", (c) => {
-    // TODO: Re-implement when registries are moved to plugin
-    return c.json({ registries: [], message: "Registries not yet implemented in plugin" });
+  skillsRouter.get("/registries", async (c) => {
+    try {
+      const registries = await getRegistries();
+      return c.json({ registries });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 500);
+    }
   });
 
   skillsRouter.post("/registries", async (c) => {
@@ -193,13 +199,28 @@ export function createSkillsRouter() {
       return c.json({ error: "name and url are required" }, 400);
     }
 
-    // TODO: Re-implement when registries are moved to plugin
-    return c.json({ error: "Registries not yet implemented in plugin" }, 501);
+    try {
+      await addRegistry(name, url);
+      return c.json({ added: true, registry: { name, url } }, 201);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 500);
+    }
   });
 
-  skillsRouter.delete("/registries/:name", (c) => {
-    // TODO: Re-implement when registries are moved to plugin
-    return c.json({ error: "Registries not yet implemented in plugin" }, 501);
+  skillsRouter.delete("/registries/:name", async (c) => {
+    const name = c.req.param("name");
+
+    try {
+      const removed = await removeRegistry(name);
+      if (!removed) {
+        return c.json({ error: "Registry not found" }, 404);
+      }
+      return c.json({ removed: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json({ error: message }, 500);
+    }
   });
 
   return skillsRouter;
