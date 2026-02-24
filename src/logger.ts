@@ -5,10 +5,10 @@
 import type { PluginLogger } from "@wopr-network/plugin-types";
 
 let pluginLogger: PluginLogger = {
-  info: console.log,
+  info: console.info,
   warn: console.warn,
   error: console.error,
-  debug: console.debug,
+  debug: console.info,
 };
 
 export function setLogger(log: PluginLogger): void {
