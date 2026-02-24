@@ -89,15 +89,19 @@ async function handleSkillCommand(ctx: WOPRPluginContext, args: string[]): Promi
       const source = rest[0];
       const name = rest[1];
       ctx.log.info("Installing...");
-      if (source.startsWith("github:")) {
-        const parts = source.replace("github:", "").split("/");
-        const [owner, repo, ...pathParts] = parts;
-        const skillPath = pathParts.join("/");
-        installSkillFromGitHub(owner, repo, skillPath, name);
-      } else {
-        installSkillFromUrl(source, name);
+      try {
+        if (source.startsWith("github:")) {
+          const parts = source.replace("github:", "").split("/");
+          const [owner, repo, ...pathParts] = parts;
+          const skillPath = pathParts.join("/");
+          installSkillFromGitHub(owner, repo, skillPath, name);
+        } else {
+          installSkillFromUrl(source, name);
+        }
+        ctx.log.info(`Installed: ${name || source}`);
+      } catch (err) {
+        ctx.log.error(`Failed to install skill: ${err instanceof Error ? err.message : String(err)}`);
       }
-      ctx.log.info(`Installed: ${name || source}`);
       break;
     }
 
@@ -106,9 +110,13 @@ async function handleSkillCommand(ctx: WOPRPluginContext, args: string[]): Promi
         ctx.log.error("Usage: wopr skill create <name> [description]");
         return;
       }
-      const description = rest.slice(1).join(" ") || undefined;
-      createSkill(rest[0], description);
-      ctx.log.info(`Created skill: ${rest[0]}`);
+      try {
+        const description = rest.slice(1).join(" ") || undefined;
+        createSkill(rest[0], description);
+        ctx.log.info(`Created skill: ${rest[0]}`);
+      } catch (err) {
+        ctx.log.error(`Failed to create skill: ${err instanceof Error ? err.message : String(err)}`);
+      }
       break;
     }
 
@@ -117,8 +125,12 @@ async function handleSkillCommand(ctx: WOPRPluginContext, args: string[]): Promi
         ctx.log.error("Usage: wopr skill remove <name>");
         return;
       }
-      removeSkill(rest[0]);
-      ctx.log.info(`Removed: ${rest[0]}`);
+      try {
+        removeSkill(rest[0]);
+        ctx.log.info(`Removed: ${rest[0]}`);
+      } catch (err) {
+        ctx.log.error(`Failed to remove skill: ${err instanceof Error ? err.message : String(err)}`);
+      }
       break;
     }
 
