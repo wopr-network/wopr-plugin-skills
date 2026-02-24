@@ -35,7 +35,7 @@ export const skillsPluginSchema: PluginSchema = {
     registries: {
       schema: registryRecordSchema,
       primaryKey: "id",
-      indexes: [{ fields: ["name"] }],
+      indexes: [],
     },
   },
 };
