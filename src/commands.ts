@@ -51,7 +51,8 @@ async function cmdSearch(ctx: WOPRPluginContext, rest: string[]): Promise<void> 
   }
   const query = rest.join(" ");
   const registries = await listRegistries();
-  const { skills } = await fetchAllRegistries(registries);
+  const { skills, errors } = await fetchAllRegistries(registries);
+  for (const err of errors) ctx.log.error(`Registry fetch error: ${err}`);
   const results = skills.filter(
     (s) =>
       s.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -192,12 +193,16 @@ async function handleRegistry(ctx: WOPRPluginContext, args: string[]): Promise<v
 
   switch (registryCmd) {
     case "list": {
-      const registries = await listRegistries();
-      if (registries.length === 0) {
-        ctx.log.info("No registries. Add: wopr skill registry add <name> <url>");
-      } else {
-        ctx.log.info("Registries:");
-        for (const r of registries) ctx.log.info(`  ${r.id}: ${r.url}`);
+      try {
+        const registries = await listRegistries();
+        if (registries.length === 0) {
+          ctx.log.info("No registries. Add: wopr skill registry add <name> <url>");
+        } else {
+          ctx.log.info("Registries:");
+          for (const r of registries) ctx.log.info(`  ${r.id}: ${r.url}`);
+        }
+      } catch (err) {
+        ctx.log.error(`Failed to list registries: ${err instanceof Error ? err.message : String(err)}`);
       }
       break;
     }
@@ -207,8 +212,12 @@ async function handleRegistry(ctx: WOPRPluginContext, args: string[]): Promise<v
         ctx.log.error("Usage: wopr skill registry add <name> <url>");
         return;
       }
-      await addRegistry(args[1], args[2]);
-      ctx.log.info(`Added registry: ${args[1]}`);
+      try {
+        await addRegistry(args[1], args[2]);
+        ctx.log.info(`Added registry: ${args[1]}`);
+      } catch (err) {
+        ctx.log.error(`Failed to add registry: ${err instanceof Error ? err.message : String(err)}`);
+      }
       break;
     }
 
@@ -217,11 +226,15 @@ async function handleRegistry(ctx: WOPRPluginContext, args: string[]): Promise<v
         ctx.log.error("Usage: wopr skill registry remove <name>");
         return;
       }
-      const removed = await removeRegistry(args[1]);
-      if (removed) {
-        ctx.log.info(`Removed registry: ${args[1]}`);
-      } else {
-        ctx.log.error(`Registry not found: ${args[1]}`);
+      try {
+        const removed = await removeRegistry(args[1]);
+        if (removed) {
+          ctx.log.info(`Removed registry: ${args[1]}`);
+        } else {
+          ctx.log.error(`Registry not found: ${args[1]}`);
+        }
+      } catch (err) {
+        ctx.log.error(`Failed to remove registry: ${err instanceof Error ? err.message : String(err)}`);
       }
       break;
     }
