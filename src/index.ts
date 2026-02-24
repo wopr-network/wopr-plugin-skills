@@ -1,5 +1,6 @@
 import type { WOPRPlugin, WOPRPluginContext } from "@wopr-network/plugin-types";
 import { registerSkillsA2ATools, setA2AContext, unregisterSkillsA2ATools } from "./a2a-tools.js";
+import { skillCommands } from "./commands.js";
 import { setLogger } from "./logger.js";
 import { createSkillsRouter } from "./routes.js";
 import { discoverSkills, formatSkillsXml } from "./skills.js";
@@ -13,6 +14,7 @@ const plugin: WOPRPlugin = {
   name: "wopr-plugin-skills",
   version: "1.0.0",
   description: "Skill discovery, state management, and REST API",
+  commands: skillCommands,
 
   async init(context: WOPRPluginContext) {
     ctx = context;
