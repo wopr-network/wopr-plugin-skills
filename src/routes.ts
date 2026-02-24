@@ -41,7 +41,7 @@ export function createSkillsRouter() {
   // Search registries for available skills
   skillsRouter.get("/available", async (c) => {
     const query = c.req.query("q") || "";
-    // TODO: Re-implement registry search when registries are moved to plugin
+    // Registry search will be re-implemented when registries are moved to plugin
     return c.json({
       skills: [],
       message: "Registry search not yet implemented in plugin",
@@ -166,7 +166,7 @@ export function createSkillsRouter() {
       return c.json({ error: "Query parameter 'q' is required" }, 400);
     }
 
-    // TODO: Re-implement registry search when registries are moved to plugin
+    // Registry search will be re-implemented when registries are moved to plugin
     return c.json({
       results: [],
       message: "Registry search not yet implemented in plugin",
