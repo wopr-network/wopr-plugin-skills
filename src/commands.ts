@@ -66,7 +66,7 @@ async function handleSkillCommand(ctx: WOPRPluginContext, args: string[]): Promi
       const results = skills.filter(
         (s) =>
           s.name.toLowerCase().includes(query.toLowerCase()) ||
-          s.description.toLowerCase().includes(query.toLowerCase()),
+          (s.description ?? "").toLowerCase().includes(query.toLowerCase()),
       );
       if (results.length === 0) {
         ctx.log.info(`No skills found matching "${query}"`);
