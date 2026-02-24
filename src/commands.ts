@@ -34,134 +34,143 @@ Subcommands:
   registry add <name> <url>     Add a skill registry
   registry remove <name>        Remove a skill registry`;
 
+async function cmdList(ctx: WOPRPluginContext): Promise<void> {
+  const { skills } = discoverSkills();
+  if (skills.length === 0) {
+    ctx.log.info("No skills installed.");
+  } else {
+    ctx.log.info("Skills:");
+    for (const s of skills) ctx.log.info(`  ${s.name} - ${s.description ?? "No description"}`);
+  }
+}
+
+async function cmdSearch(ctx: WOPRPluginContext, rest: string[]): Promise<void> {
+  if (!rest[0]) {
+    ctx.log.error("Usage: wopr skill search <query>");
+    return;
+  }
+  const query = rest.join(" ");
+  const registries = await listRegistries();
+  const { skills } = await fetchAllRegistries(registries);
+  const results = skills.filter(
+    (s) =>
+      s.name.toLowerCase().includes(query.toLowerCase()) ||
+      (s.description ?? "").toLowerCase().includes(query.toLowerCase()),
+  );
+  if (results.length === 0) {
+    ctx.log.info(`No skills found matching "${query}"`);
+  } else {
+    ctx.log.info(`Found ${results.length} skill(s):`);
+    for (const r of results) {
+      ctx.log.info(`  ${r.name} (${r.registry})`);
+      ctx.log.info(`    ${r.description || "No description"}`);
+      ctx.log.info(`    wopr skill install ${r.source}`);
+    }
+  }
+}
+
+function cmdInstall(ctx: WOPRPluginContext, rest: string[]): void {
+  if (!rest[0]) {
+    ctx.log.error("Usage: wopr skill install <source> [name]");
+    return;
+  }
+  const source = rest[0];
+  const name = rest[1];
+  ctx.log.info("Installing...");
+  try {
+    if (source.startsWith("github:")) {
+      const parts = source.replace("github:", "").split("/");
+      const [owner, repo, ...pathParts] = parts;
+      const skillPath = pathParts.join("/");
+      installSkillFromGitHub(owner, repo, skillPath, name);
+    } else {
+      installSkillFromUrl(source, name);
+    }
+    ctx.log.info(`Installed: ${name || source}`);
+  } catch (err) {
+    ctx.log.error(`Failed to install skill: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+function cmdCreate(ctx: WOPRPluginContext, rest: string[]): void {
+  if (!rest[0]) {
+    ctx.log.error("Usage: wopr skill create <name> [description]");
+    return;
+  }
+  try {
+    const description = rest.slice(1).join(" ") || undefined;
+    createSkill(rest[0], description);
+    ctx.log.info(`Created skill: ${rest[0]}`);
+  } catch (err) {
+    ctx.log.error(`Failed to create skill: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+function cmdRemove(ctx: WOPRPluginContext, rest: string[]): void {
+  if (!rest[0]) {
+    ctx.log.error("Usage: wopr skill remove <name>");
+    return;
+  }
+  try {
+    removeSkill(rest[0]);
+    ctx.log.info(`Removed: ${rest[0]}`);
+  } catch (err) {
+    ctx.log.error(`Failed to remove skill: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+async function cmdEnable(ctx: WOPRPluginContext, rest: string[]): Promise<void> {
+  if (!rest[0]) {
+    ctx.log.error("Usage: wopr skill enable <name>");
+    return;
+  }
+  const found = await enableSkillAsync(rest[0]);
+  if (found) {
+    ctx.log.info(`Enabled: ${rest[0]}`);
+  } else {
+    ctx.log.error(`Skill not found: ${rest[0]}`);
+  }
+}
+
+async function cmdDisable(ctx: WOPRPluginContext, rest: string[]): Promise<void> {
+  if (!rest[0]) {
+    ctx.log.error("Usage: wopr skill disable <name>");
+    return;
+  }
+  const found = await disableSkillAsync(rest[0]);
+  if (found) {
+    ctx.log.info(`Disabled: ${rest[0]}`);
+  } else {
+    ctx.log.error(`Skill not found: ${rest[0]}`);
+  }
+}
+
 async function handleSkillCommand(ctx: WOPRPluginContext, args: string[]): Promise<void> {
   const subcommand = args[0];
   const rest = args.slice(1);
 
-  if (subcommand === "registry") {
-    await handleRegistry(ctx, rest);
-    return;
-  }
-
   switch (subcommand) {
-    case "list": {
-      const { skills } = discoverSkills();
-      if (skills.length === 0) {
-        ctx.log.info("No skills installed.");
-      } else {
-        ctx.log.info("Skills:");
-        for (const s of skills) ctx.log.info(`  ${s.name} - ${s.description ?? "No description"}`);
-      }
+    case "list":
+      await cmdList(ctx);
       break;
-    }
-
-    case "search": {
-      if (!rest[0]) {
-        ctx.log.error("Usage: wopr skill search <query>");
-        return;
-      }
-      const query = rest.join(" ");
-      const registries = await listRegistries();
-      const { skills } = await fetchAllRegistries(registries);
-      const results = skills.filter(
-        (s) =>
-          s.name.toLowerCase().includes(query.toLowerCase()) ||
-          (s.description ?? "").toLowerCase().includes(query.toLowerCase()),
-      );
-      if (results.length === 0) {
-        ctx.log.info(`No skills found matching "${query}"`);
-      } else {
-        ctx.log.info(`Found ${results.length} skill(s):`);
-        for (const r of results) {
-          ctx.log.info(`  ${r.name} (${r.registry})`);
-          ctx.log.info(`    ${r.description || "No description"}`);
-          ctx.log.info(`    wopr skill install ${r.source}`);
-        }
-      }
+    case "search":
+      await cmdSearch(ctx, rest);
       break;
-    }
-
-    case "install": {
-      if (!rest[0]) {
-        ctx.log.error("Usage: wopr skill install <source> [name]");
-        return;
-      }
-      const source = rest[0];
-      const name = rest[1];
-      ctx.log.info("Installing...");
-      try {
-        if (source.startsWith("github:")) {
-          const parts = source.replace("github:", "").split("/");
-          const [owner, repo, ...pathParts] = parts;
-          const skillPath = pathParts.join("/");
-          installSkillFromGitHub(owner, repo, skillPath, name);
-        } else {
-          installSkillFromUrl(source, name);
-        }
-        ctx.log.info(`Installed: ${name || source}`);
-      } catch (err) {
-        ctx.log.error(`Failed to install skill: ${err instanceof Error ? err.message : String(err)}`);
-      }
+    case "install":
+      cmdInstall(ctx, rest);
       break;
-    }
-
-    case "create": {
-      if (!rest[0]) {
-        ctx.log.error("Usage: wopr skill create <name> [description]");
-        return;
-      }
-      try {
-        const description = rest.slice(1).join(" ") || undefined;
-        createSkill(rest[0], description);
-        ctx.log.info(`Created skill: ${rest[0]}`);
-      } catch (err) {
-        ctx.log.error(`Failed to create skill: ${err instanceof Error ? err.message : String(err)}`);
-      }
+    case "create":
+      cmdCreate(ctx, rest);
       break;
-    }
-
-    case "remove": {
-      if (!rest[0]) {
-        ctx.log.error("Usage: wopr skill remove <name>");
-        return;
-      }
-      try {
-        removeSkill(rest[0]);
-        ctx.log.info(`Removed: ${rest[0]}`);
-      } catch (err) {
-        ctx.log.error(`Failed to remove skill: ${err instanceof Error ? err.message : String(err)}`);
-      }
+    case "remove":
+      cmdRemove(ctx, rest);
       break;
-    }
-
-    case "enable": {
-      if (!rest[0]) {
-        ctx.log.error("Usage: wopr skill enable <name>");
-        return;
-      }
-      const found = await enableSkillAsync(rest[0]);
-      if (found) {
-        ctx.log.info(`Enabled: ${rest[0]}`);
-      } else {
-        ctx.log.error(`Skill not found: ${rest[0]}`);
-      }
+    case "enable":
+      await cmdEnable(ctx, rest);
       break;
-    }
-
-    case "disable": {
-      if (!rest[0]) {
-        ctx.log.error("Usage: wopr skill disable <name>");
-        return;
-      }
-      const found = await disableSkillAsync(rest[0]);
-      if (found) {
-        ctx.log.info(`Disabled: ${rest[0]}`);
-      } else {
-        ctx.log.error(`Skill not found: ${rest[0]}`);
-      }
+    case "disable":
+      await cmdDisable(ctx, rest);
       break;
-    }
-
     case "cache":
       if (rest[0] === "clear") {
         clearSkillCache();
@@ -170,7 +179,9 @@ async function handleSkillCommand(ctx: WOPRPluginContext, args: string[]): Promi
         ctx.log.info(USAGE);
       }
       break;
-
+    case "registry":
+      await handleRegistry(ctx, rest);
+      break;
     default:
       ctx.log.info(USAGE);
   }
