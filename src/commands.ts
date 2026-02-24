@@ -50,7 +50,7 @@ async function handleSkillCommand(ctx: WOPRPluginContext, args: string[]): Promi
         ctx.log.info("No skills installed.");
       } else {
         ctx.log.info("Skills:");
-        for (const s of skills) ctx.log.info(`  ${s.name} - ${s.description}`);
+        for (const s of skills) ctx.log.info(`  ${s.name} - ${s.description ?? "No description"}`);
       }
       break;
     }
