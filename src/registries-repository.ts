@@ -1,13 +1,11 @@
 import type { WOPRPluginContext } from "@wopr-network/plugin-types";
 import type { RegistryRecord } from "./skills-schema.js";
-import { skillsPluginSchema } from "./skills-schema.js";
 
 let initialized = false;
 let ctx: WOPRPluginContext | null = null;
 
 export async function initRegistriesStorage(): Promise<void> {
   if (initialized || !ctx) return;
-  await ctx.storage.register(skillsPluginSchema);
   initialized = true;
 }
 
@@ -17,6 +15,7 @@ export function setPluginContextForRegistries(context: WOPRPluginContext): void 
 
 export function resetRegistriesStorageInit(): void {
   initialized = false;
+  ctx = null;
 }
 
 function registriesRepo() {
@@ -36,7 +35,7 @@ export async function addRegistry(name: string, url: string): Promise<void> {
   await initRegistriesStorage();
   const repo = registriesRepo();
   const now = Date.now();
-  const existing = await repo.findFirst({ id: name } as Parameters<typeof repo.findFirst>[0]);
+  const existing = await repo.findFirst({ id: name });
   if (existing) {
     await repo.update(name, { url, updatedAt: now });
   } else {
@@ -47,7 +46,7 @@ export async function addRegistry(name: string, url: string): Promise<void> {
 export async function removeRegistry(name: string): Promise<boolean> {
   await initRegistriesStorage();
   const repo = registriesRepo();
-  const existing = await repo.findFirst({ id: name } as Parameters<typeof repo.findFirst>[0]);
+  const existing = await repo.findFirst({ id: name });
   if (!existing) return false;
   await repo.delete(name);
   return true;

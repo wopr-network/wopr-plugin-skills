@@ -4,6 +4,7 @@
  */
 
 import { Hono } from "hono";
+import { addRegistry, getRegistries, removeRegistry } from "./registries-repository.js";
 import {
   clearSkillCache,
   createSkill,
@@ -15,7 +16,6 @@ import {
   readAllSkillStatesAsync,
   removeSkill,
 } from "./skills.js";
-import { addRegistry, getRegistries, removeRegistry } from "./registries-repository.js";
 
 export function createSkillsRouter() {
   const skillsRouter = new Hono();
@@ -197,6 +197,12 @@ export function createSkillsRouter() {
 
     if (!name || !url) {
       return c.json({ error: "name and url are required" }, 400);
+    }
+
+    try {
+      new URL(url);
+    } catch {
+      return c.json({ error: "url must be a valid URL" }, 400);
     }
 
     try {
