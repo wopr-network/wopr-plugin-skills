@@ -20,6 +20,10 @@ vi.mock("../src/logger.js", () => ({
 vi.mock("../src/skills.js", () => ({
   discoverSkills: vi.fn(() => ({ skills: [], warnings: [] })),
   formatSkillsXml: vi.fn(() => ""),
+  installSkillFromGitHub: vi.fn(),
+  installSkillFromUrl: vi.fn(),
+  enableSkillAsync: vi.fn(),
+  disableSkillAsync: vi.fn(),
 }));
 
 vi.mock("../src/skills-migrate.js", () => ({
@@ -50,7 +54,7 @@ import { setLogger } from "../src/logger.js";
 import { initSkillsStorage, resetSkillsStorageInit, setPluginContext } from "../src/skills-repository.js";
 import { migrateSkillsToSQL } from "../src/skills-migrate.js";
 import { createSkillsRouter } from "../src/routes.js";
-import { discoverSkills, formatSkillsXml } from "../src/skills.js";
+import { discoverSkills, formatSkillsXml, installSkillFromGitHub, installSkillFromUrl, enableSkillAsync, disableSkillAsync } from "../src/skills.js";
 
 function createMockCtx() {
   return {
@@ -152,6 +156,17 @@ describe("wopr-plugin-skills", () => {
       expect(mockCtx.registerExtension).toHaveBeenCalledWith("skills:router", { fake: "router" });
     });
 
+    it("registers skills extension API", async () => {
+      await plugin.init(mockCtx);
+      expect(mockCtx.registerExtension).toHaveBeenCalledWith("skills", {
+        install: installSkillFromGitHub,
+        installFromUrl: installSkillFromUrl,
+        enable: enableSkillAsync,
+        disable: disableSkillAsync,
+        list: discoverSkills,
+      });
+    });
+
     it("logs initialization message", async () => {
       await plugin.init(mockCtx);
       expect(mockCtx.log.info).toHaveBeenCalledWith("Skills plugin initialized");
@@ -169,6 +184,12 @@ describe("wopr-plugin-skills", () => {
       await plugin.init(mockCtx);
       await plugin.shutdown();
       expect(mockCtx.unregisterExtension).toHaveBeenCalledWith("skills:router");
+    });
+
+    it("unregisters skills extension after init", async () => {
+      await plugin.init(mockCtx);
+      await plugin.shutdown();
+      expect(mockCtx.unregisterExtension).toHaveBeenCalledWith("skills");
     });
 
     it("unregisters A2A tools after init", async () => {
