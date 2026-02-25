@@ -28,6 +28,7 @@ vi.mock("../src/skills.js", () => ({
 
 vi.mock("../src/skills-migrate.js", () => ({
   migrateSkillsToSQL: vi.fn(),
+  migrateRegistriesToSQL: vi.fn(),
 }));
 
 vi.mock("../src/skills-repository.js", () => ({
