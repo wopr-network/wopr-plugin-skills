@@ -3,10 +3,25 @@ import { registerSkillsA2ATools, setA2AContext, unregisterSkillsA2ATools } from 
 import { skillCommands } from "./commands.js";
 import { setLogger } from "./logger.js";
 import { createSkillsRouter } from "./routes.js";
-import { discoverSkills, formatSkillsXml } from "./skills.js";
+import {
+  disableSkillAsync,
+  discoverSkills,
+  enableSkillAsync,
+  formatSkillsXml,
+  installSkillFromGitHub,
+  installSkillFromUrl,
+} from "./skills.js";
 import { migrateSkillsToSQL } from "./skills-migrate.js";
 import { initSkillsStorage, resetSkillsStorageInit, setPluginContext } from "./skills-repository.js";
 import { skillsPluginSchema } from "./skills-schema.js";
+
+export interface SkillsExtension {
+  install: typeof installSkillFromGitHub;
+  installFromUrl: typeof installSkillFromUrl;
+  enable: typeof enableSkillAsync;
+  disable: typeof disableSkillAsync;
+  list: typeof discoverSkills;
+}
 
 let ctx: WOPRPluginContext | null = null;
 
@@ -59,6 +74,13 @@ const plugin: WOPRPlugin = {
     // 5. Expose REST router as extension for daemon to mount
     const router = createSkillsRouter();
     context.registerExtension("skills:router", router);
+    context.registerExtension("skills", {
+      install: installSkillFromGitHub,
+      installFromUrl: installSkillFromUrl,
+      enable: enableSkillAsync,
+      disable: disableSkillAsync,
+      list: discoverSkills,
+    } satisfies SkillsExtension);
 
     context.log.info("Skills plugin initialized");
   },
@@ -67,6 +89,7 @@ const plugin: WOPRPlugin = {
     if (ctx) {
       ctx.unregisterContextProvider("skills");
       ctx.unregisterExtension("skills:router");
+      ctx.unregisterExtension("skills");
       unregisterSkillsA2ATools();
       resetSkillsStorageInit();
     }
