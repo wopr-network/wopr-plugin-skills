@@ -86,7 +86,9 @@ export async function migrateRegistriesToSQL(): Promise<void> {
   let registries: Array<{ name: string; url: string }>;
   try {
     const raw = readFileSync(REGISTRIES_FILE, "utf-8");
-    registries = JSON.parse(raw) as Array<{ name: string; url: string }>;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error("Expected array");
+    registries = parsed as Array<{ name: string; url: string }>;
   } catch (error) {
     logger.error("[migration] Failed to parse registries.json:", error);
     return;
@@ -94,6 +96,10 @@ export async function migrateRegistriesToSQL(): Promise<void> {
 
   let migratedCount = 0;
   for (const reg of registries) {
+    if (!reg || typeof reg.name !== "string" || typeof reg.url !== "string") {
+      logger.warn("[migration] Skipping malformed registry entry:", reg);
+      continue;
+    }
     try {
       await addRegistry(reg.name, reg.url);
       migratedCount++;
