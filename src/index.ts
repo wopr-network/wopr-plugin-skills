@@ -11,7 +11,7 @@ import {
   installSkillFromGitHub,
   installSkillFromUrl,
 } from "./skills.js";
-import { migrateSkillsToSQL } from "./skills-migrate.js";
+import { migrateRegistriesToSQL, migrateSkillsToSQL } from "./skills-migrate.js";
 import { initSkillsStorage, resetSkillsStorageInit, setPluginContext } from "./skills-repository.js";
 import { skillsPluginSchema } from "./skills-schema.js";
 
@@ -47,6 +47,7 @@ const plugin: WOPRPlugin = {
 
     // 2. Run migration (idempotent)
     await migrateSkillsToSQL(context);
+    await migrateRegistriesToSQL();
 
     // 3. Register context provider for skills prompt injection
     context.registerContextProvider({

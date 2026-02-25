@@ -2,7 +2,8 @@ import { existsSync, readFileSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import type { WOPRPluginContext } from "@wopr-network/plugin-types";
 import { logger } from "./logger.js";
-import { WOPR_HOME } from "./paths.js";
+import { REGISTRIES_FILE, WOPR_HOME } from "./paths.js";
+import { addRegistry } from "./registries-repository.js";
 import { initSkillsStorage, setPluginContext } from "./skills-repository.js";
 import type { SkillStateRecord } from "./skills-schema.js";
 
@@ -68,6 +69,52 @@ async function migrateSkillState(
     enabledAt: state.enabled ? now : undefined,
     useCount: 0,
   });
+}
+
+/** Migrate registries.json to plugin SQL storage — idempotent */
+export async function migrateRegistriesToSQL(): Promise<void> {
+  if (!existsSync(REGISTRIES_FILE)) {
+    logger.info("[migration] No registries.json found, skipping registry migration");
+    return;
+  }
+
+  logger.info("[migration] Starting registry migration from JSON to SQL");
+
+  // Ensure storage is initialized
+  await initSkillsStorage();
+
+  let registries: Array<{ name: string; url: string }>;
+  try {
+    const raw = readFileSync(REGISTRIES_FILE, "utf-8");
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error("Expected array");
+    registries = parsed as Array<{ name: string; url: string }>;
+  } catch (error) {
+    logger.error("[migration] Failed to parse registries.json:", error);
+    return;
+  }
+
+  let migratedCount = 0;
+  for (const reg of registries) {
+    if (!reg || typeof reg.name !== "string" || typeof reg.url !== "string") {
+      logger.warn("[migration] Skipping malformed registry entry:", reg);
+      continue;
+    }
+    try {
+      await addRegistry(reg.name, reg.url);
+      migratedCount++;
+    } catch (error) {
+      // Skip duplicates (already migrated)
+      const msg = error instanceof Error ? error.message : String(error);
+      if (!msg.includes("already exists")) {
+        logger.error(`[migration] Failed to migrate registry "${reg.name}":`, error);
+      }
+    }
+  }
+
+  logger.info(`[migration] Migrated ${migratedCount} registries to SQL`);
+  backupFile(REGISTRIES_FILE);
+  logger.info("[migration] Backup of registries.json complete");
 }
 
 function backupFile(filePath: string): void {
