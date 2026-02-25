@@ -80,6 +80,9 @@ export async function migrateRegistriesToSQL(): Promise<void> {
 
   logger.info("[migration] Starting registry migration from JSON to SQL");
 
+  // Ensure storage is initialized
+  await initSkillsStorage();
+
   let registries: Array<{ name: string; url: string }>;
   try {
     const raw = readFileSync(REGISTRIES_FILE, "utf-8");
