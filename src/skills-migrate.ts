@@ -29,7 +29,7 @@ export async function migrateSkillsToSQL(ctx: WOPRPluginContext): Promise<void> 
   try {
     const raw = readFileSync(SKILLS_STATE_FILE, "utf-8");
     skillsState = JSON.parse(raw) as Record<string, { enabled: boolean }>;
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error("[migration] Failed to parse skills-state.json:", error);
     return;
   }
@@ -40,7 +40,7 @@ export async function migrateSkillsToSQL(ctx: WOPRPluginContext): Promise<void> 
     try {
       await migrateSkillState(skillName, state, skillsRepo, ctx);
       migratedCount++;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error(`[migration] Failed to migrate skill state "${skillName}":`, error);
     }
   }
@@ -89,7 +89,7 @@ export async function migrateRegistriesToSQL(): Promise<void> {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) throw new Error("Expected array");
     registries = parsed as Array<{ name: string; url: string }>;
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error("[migration] Failed to parse registries.json:", error);
     return;
   }
@@ -103,7 +103,7 @@ export async function migrateRegistriesToSQL(): Promise<void> {
     try {
       await addRegistry(reg.name, reg.url);
       migratedCount++;
-    } catch (error) {
+    } catch (error: unknown) {
       // Skip duplicates (already migrated)
       const msg = error instanceof Error ? error.message : String(error);
       if (!msg.includes("already exists")) {

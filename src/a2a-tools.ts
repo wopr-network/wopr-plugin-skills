@@ -35,6 +35,7 @@ export function registerSkillsA2ATools(): void {
               description: "Filter by source: managed, workspace, bundled, extra",
             },
           },
+          additionalProperties: false,
         },
         handler: async (args) => {
           const { skills, warnings } = discoverSkills();
@@ -64,13 +65,13 @@ export function registerSkillsA2ATools(): void {
             name: { type: "string", description: "Skill name to enable" },
           },
           required: ["name"],
+          additionalProperties: false,
         },
         handler: async (args) => {
           const found = await enableSkillAsync(args.name as string);
           const result = found ? { enabled: true, name: args.name } : { error: "Skill not found" };
           return {
             content: [{ type: "text" as const, text: JSON.stringify(result) }],
-            isError: !found,
           };
         },
       },
@@ -83,13 +84,13 @@ export function registerSkillsA2ATools(): void {
             name: { type: "string", description: "Skill name to disable" },
           },
           required: ["name"],
+          additionalProperties: false,
         },
         handler: async (args) => {
           const found = await disableSkillAsync(args.name as string);
           const result = found ? { disabled: true, name: args.name } : { error: "Skill not found" };
           return {
             content: [{ type: "text" as const, text: JSON.stringify(result) }],
-            isError: !found,
           };
         },
       },
@@ -102,13 +103,13 @@ export function registerSkillsA2ATools(): void {
             name: { type: "string", description: "Skill name to look up" },
           },
           required: ["name"],
+          additionalProperties: false,
         },
         handler: async (args) => {
           const skill = getSkillByName(args.name as string);
           if (!skill) {
             return {
               content: [{ type: "text" as const, text: JSON.stringify({ error: "Skill not found" }) }],
-              isError: true,
             };
           }
           const states = await readAllSkillStatesAsync();

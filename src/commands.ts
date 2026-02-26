@@ -87,7 +87,7 @@ function cmdInstall(ctx: WOPRPluginContext, rest: string[]): void {
       installSkillFromUrl(source, name);
     }
     ctx.log.info(`Installed: ${name || source}`);
-  } catch (err) {
+  } catch (err: unknown) {
     ctx.log.error(`Failed to install skill: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
@@ -101,7 +101,7 @@ function cmdCreate(ctx: WOPRPluginContext, rest: string[]): void {
     const description = rest.slice(1).join(" ") || undefined;
     createSkill(rest[0], description);
     ctx.log.info(`Created skill: ${rest[0]}`);
-  } catch (err) {
+  } catch (err: unknown) {
     ctx.log.error(`Failed to create skill: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
@@ -114,7 +114,7 @@ function cmdRemove(ctx: WOPRPluginContext, rest: string[]): void {
   try {
     removeSkill(rest[0]);
     ctx.log.info(`Removed: ${rest[0]}`);
-  } catch (err) {
+  } catch (err: unknown) {
     ctx.log.error(`Failed to remove skill: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
