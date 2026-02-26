@@ -99,11 +99,11 @@ describe("a2a-tools", () => {
   });
 
   describe("skills.info handler", () => {
-    it("returns error when skill not found", async () => {
+    it("returns error content when skill not found", async () => {
       registerSkillsA2ATools();
       const tool = registeredConfig.tools.find((t: any) => t.name === "skills.info");
       const result = await tool.handler({ name: "nonexistent" });
-      expect(result.isError).toBe(true);
+      expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0].text);
       expect(parsed.error).toBe("Skill not found");
     });

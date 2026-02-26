@@ -209,7 +209,7 @@ function loadSkillsFromDir(
         warnings.push(...result.warnings);
       }
     }
-  } catch (error) {
+  } catch (error: unknown) {
     logger.warn(`Failed to load skills from ${dir}:`, error);
   }
 
@@ -270,7 +270,7 @@ function loadSkillFromFile(
     };
 
     return { entry, warnings };
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "failed to parse skill file";
     warnings.push({ skillPath: filePath, message });
     return { entry: null, warnings };
@@ -506,7 +506,7 @@ export async function installSkillDependencies(
     let approved: boolean;
     try {
       approved = await consentProvider.requestConsent(skill.name, step, rawCommand);
-    } catch (err) {
+    } catch (err: unknown) {
       logger.warn(`Consent provider threw for step "${step.id}" of skill "${skill.name}"; failing closed`, err);
       return false;
     }
@@ -543,7 +543,7 @@ export async function installSkillDependencies(
           }
           break;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error(`Failed to install ${step.id}:`, error);
       return false;
     }
@@ -593,7 +593,7 @@ export function removeSkill(name: string): void {
   rmSync(targetDir, { recursive: true, force: true });
 
   import("./skills-repository.js").then(({ removeSkillState }) => {
-    removeSkillState(name).catch((err: Error) => {
+    removeSkillState(name).catch((err: unknown) => {
       logger.warn(`Failed to remove skill state for "${name}":`, err);
     });
   });
@@ -668,7 +668,7 @@ export function installSkillFromUrl(source: string, name?: string): Skill {
 
   try {
     execFileSync("git", ["clone", source, targetDir], { stdio: "inherit" });
-  } catch (error) {
+  } catch (error: unknown) {
     rmSync(targetDir, { recursive: true, force: true });
     throw error;
   }

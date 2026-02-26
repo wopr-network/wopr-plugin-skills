@@ -53,7 +53,7 @@ export function createSkillsRouter() {
           )
         : skills;
       return c.json({ skills: filtered, errors: errors.length > 0 ? errors : undefined });
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message, skills: [] }, 500);
     }
@@ -71,7 +71,7 @@ export function createSkillsRouter() {
     try {
       const skill = createSkill(name, description);
       return c.json({ created: true, skill }, 201);
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 400);
     }
@@ -97,7 +97,7 @@ export function createSkillsRouter() {
         skill = installSkillFromUrl(source, name);
       }
       return c.json({ installed: true, skill }, 201);
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 400);
     }
@@ -115,7 +115,7 @@ export function createSkillsRouter() {
     try {
       removeSkill(name);
       return c.json({ removed: true });
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 400);
     }
@@ -128,7 +128,7 @@ export function createSkillsRouter() {
     try {
       removeSkill(name);
       return c.json({ removed: true });
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 400);
     }
@@ -145,7 +145,7 @@ export function createSkillsRouter() {
       }
 
       return c.json({ enabled: true });
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 500);
     }
@@ -162,7 +162,7 @@ export function createSkillsRouter() {
       }
 
       return c.json({ disabled: true });
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 500);
     }
@@ -185,7 +185,7 @@ export function createSkillsRouter() {
           s.description.toLowerCase().includes(query.toLowerCase()),
       );
       return c.json({ results, query, errors: errors.length > 0 ? errors : undefined });
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message, results: [], query }, 500);
     }
@@ -210,7 +210,7 @@ export function createSkillsRouter() {
           lastError: r.lastError ?? null,
         })),
       });
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 500);
     }
@@ -227,7 +227,7 @@ export function createSkillsRouter() {
     try {
       const registry = await addRegistry(name, url);
       return c.json({ added: true, registry: { name: registry.id, url: registry.url } }, 201);
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("already exists")) {
         return c.json({ error: message }, 409);
@@ -244,7 +244,7 @@ export function createSkillsRouter() {
         return c.json({ error: `Registry "${name}" not found` }, 404);
       }
       return c.json({ removed: true });
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 500);
     }

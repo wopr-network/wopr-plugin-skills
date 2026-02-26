@@ -24,11 +24,25 @@ export interface SkillsExtension {
 }
 
 let ctx: WOPRPluginContext | null = null;
+const cleanups: Array<() => void> = [];
 
 const plugin: WOPRPlugin = {
   name: "wopr-plugin-skills",
   version: "1.0.0",
   description: "Skill discovery, state management, and REST API",
+  manifest: {
+    name: "wopr-plugin-skills",
+    version: "1.0.0",
+    description: "Skill discovery, state management, and REST API",
+    capabilities: ["skills:discover", "skills:manage", "skills:state"],
+    category: "utility",
+    tags: ["skills", "automation", "discovery"],
+    icon: "puzzle",
+    requires: {},
+    lifecycle: {
+      shutdownBehavior: "graceful",
+    },
+  },
   commands: skillCommands,
 
   async init(context: WOPRPluginContext) {
@@ -68,13 +82,16 @@ const plugin: WOPRPlugin = {
         };
       },
     });
+    cleanups.push(() => context.unregisterContextProvider("skills"));
 
     // 4. Register A2A tools
     registerSkillsA2ATools();
+    cleanups.push(() => unregisterSkillsA2ATools());
 
     // 5. Expose REST router as extension for daemon to mount
     const router = createSkillsRouter();
     context.registerExtension("skills:router", router);
+    cleanups.push(() => context.unregisterExtension("skills:router"));
     context.registerExtension("skills", {
       install: installSkillFromGitHub,
       installFromUrl: installSkillFromUrl,
@@ -82,18 +99,18 @@ const plugin: WOPRPlugin = {
       disable: disableSkillAsync,
       list: discoverSkills,
     } satisfies SkillsExtension);
+    cleanups.push(() => context.unregisterExtension("skills"));
 
     context.log.info("Skills plugin initialized");
   },
 
   async shutdown() {
-    if (ctx) {
-      ctx.unregisterContextProvider("skills");
-      ctx.unregisterExtension("skills:router");
-      ctx.unregisterExtension("skills");
-      unregisterSkillsA2ATools();
-      resetSkillsStorageInit();
+    if (!ctx) return;
+    for (const fn of cleanups) {
+      fn();
     }
+    cleanups.length = 0;
+    resetSkillsStorageInit();
     ctx = null;
   },
 };
