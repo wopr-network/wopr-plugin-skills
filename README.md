@@ -1,3 +1,11 @@
+# ⚠️ This package has moved
+
+This package is now maintained in the [wopr-plugins monorepo](https://github.com/wopr-network/wopr-plugins/tree/main/packages/plugin-skills).
+
+This repository is archived and no longer accepts contributions.
+
+---
+
 # @wopr-network/wopr-plugin-skills
 
 Skills discovery, state management, and REST API for WOPR.
